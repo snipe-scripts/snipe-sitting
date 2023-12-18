@@ -61,13 +61,13 @@ end
 local function PlacingThread(animData)
     if ped == nil then
         local playerPed = PlayerPedId()
-        ped = ClonePed(playerPed, false, false, true)
+        ped = ClonePed(playerPed, false, false, false)
         FreezeEntityPosition(ped, true)
-        SetEntityAlpha(ped, 0, true)
+        SetEntityAlpha(ped, 0)
         RequestAnimDictionary(animData.dict)
         TaskPlayAnim(ped, animData.dict, animData.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
         SetEntityCollision(ped, false, false)
-        SetEntityAlpha(ped, 100, true)
+        SetEntityAlpha(ped, 100)
         
         heading = GetEntityHeading(playerPed) + 90.0
         lib.showTextUI(table.concat(txt))
@@ -172,6 +172,7 @@ function stopPlacing()
     ped = nil
     heading = 0.0
     currentCoords = nil
+    lib.hideTextUI()
 end
 
 RegisterCommand("sit", function(source, args)
