@@ -68,6 +68,7 @@ local function PlacingThread(animData)
         TaskPlayAnim(ped, animData.dict, animData.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
         SetEntityCollision(ped, false, false)
         SetEntityAlpha(ped, 100)
+        SetBlockingOfNonTemporaryEvents(ped, true)
         
         heading = GetEntityHeading(playerPed) + 90.0
         lib.showTextUI(table.concat(txt))
