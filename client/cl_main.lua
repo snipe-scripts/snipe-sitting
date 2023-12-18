@@ -24,11 +24,11 @@ end
 
 local function StartSittingThread()
     sitting = true
-    lib.showTextUI("Press [X] to cancel")
+    lib.showTextUI("Press [Q] to cancel")
     CreateThread(function ()
         while sitting do
             Wait(1)
-            if IsControlJustPressed(0, 73) then
+            if IsControlJustPressed(0, 44) then
                 sitting = false
                 lib.hideTextUI()
                 ClearPedTasksImmediately(PlayerPedId())
