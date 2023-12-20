@@ -95,7 +95,6 @@ local function PlacingThread(animData)
                     currentCoordsZ = currentCoordsZ - 0.01
                 end
                 if IsDisabledControlJustPressed(0, 14) then
-                    print("adadwd")
                     heading = heading + 5
                     if heading > 360 then heading = 0.0 end
                 end
