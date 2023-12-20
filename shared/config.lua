@@ -5,6 +5,8 @@
 
 Config = {}
 
+-- Jay added this
+Config.SetToFirstPerson = true
 
 -- you can add more sitting animations here.
 Config.Anims = {
