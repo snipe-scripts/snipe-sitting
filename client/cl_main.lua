@@ -10,9 +10,27 @@ local txt = {
     '-- Sit --  \n',
     '[E] Sit  \n',
     '[X / Right Click] Cancel  \n',
+    '[G] Next Animation  \n',
+    '[H] Previous Animation  \n',
+    '[Up/Down Arrows] Height \n',
     '[SCROLL] Rotate  \n',
 }
 
+local currentAnimIndex = 1
+
+local function CycleAnimations(direction)
+    if direction == "next" then
+        currentAnimIndex = currentAnimIndex + 1
+        if currentAnimIndex > #Config.Anims then
+            currentAnimIndex = 1
+        end
+    elseif direction == "previous" then
+        currentAnimIndex = currentAnimIndex - 1
+        if currentAnimIndex < 1 then
+            currentAnimIndex = #Config.Anims
+        end
+    end
+end
 
 local function RequestAnimDictionary(dict)
     RequestAnimDict(dict)
@@ -64,39 +82,83 @@ local function PlacingThread(animData)
         ped = ClonePed(playerPed, false, false, false)
         FreezeEntityPosition(ped, true)
         SetEntityAlpha(ped, 0)
-        RequestAnimDictionary(animData.dict)
+
+        local animToUse = Config.Anims[currentAnimIndex]
+
+        if not animToUse then
+            lib.notify({ type = "error", description = "No animation found." })
+            return
+        end
+
+        lib.requestAnimDict(animData.dict)
         TaskPlayAnim(ped, animData.dict, animData.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
         SetEntityCollision(ped, false, false)
         SetEntityAlpha(ped, 100)
+        if Config.SetToFirstPerson then
+            SetFollowPedCamViewMode(3)
+            SetCamViewModeForContext(0, 4)
+        end
         SetBlockingOfNonTemporaryEvents(ped, true)
-        
         heading = GetEntityHeading(playerPed) + 90.0
         lib.showTextUI(table.concat(txt))
         CreateThread(function ()
+            local currentCoordsZ = 0
             while ped ~= nil do
                 Wait(1)
                 DisableControlAction(0, 22, true)
                 startPlacing()
                 if currentCoords then
-                    SetEntityCoords(ped, currentCoords.x, currentCoords.y, currentCoords.z)
+                    SetEntityCoords(ped, currentCoords.x, currentCoords.y, currentCoords.z + currentCoordsZ)
                     SetEntityHeading(ped, heading)
                 end
                 if IsDisabledControlJustPressed(0, 14) then
                     heading = heading + 5
                     if heading > 360 then heading = 0.0 end
                 end
-        
+                if IsDisabledControlPressed(0, 27) then
+                    currentCoordsZ = currentCoordsZ + 0.01
+                end
+                if IsDisabledControlPressed(0, 173) then
+                    currentCoordsZ = currentCoordsZ - 0.01
+                end
                 if IsDisabledControlJustPressed(0, 15) then
                     heading = heading - 5
                     if heading < 0 then heading = 360.0 end
                 end
                 if IsControlJustPressed(0, 38) then
                     if #(GetEntityCoords(PlayerPedId()) - currentCoords) < 5.0 then
-                        MakePedSitDown(GetEntityCoords(ped), GetEntityHeading(ped), animData)
+                        MakePedSitDown(GetEntityCoords(ped), GetEntityHeading(ped), animToUse)
                     else
                         lib.notify({type = "error", description = "You are too far"})
                     end
                 end
+
+                if IsControlJustPressed(0, 47) then -- G
+                    CycleAnimations("next")
+                    animToUse = Config.Anims[currentAnimIndex]
+
+                    if not animToUse then
+                        lib.notify({ type = "error", description = "No animation found." })
+                        return
+                    end
+
+                    RequestAnimDictionary(animToUse.dict)
+                    TaskPlayAnim(ped, animToUse.dict, animToUse.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
+                end
+
+                if IsControlJustPressed(0, 74) then -- H
+                    CycleAnimations("previous")
+                    animToUse = Config.Anims[currentAnimIndex]
+
+                    if not animToUse then
+                        lib.notify({ type = "error", description = "No animation found." })
+                        return
+                    end
+
+                    RequestAnimDictionary(animToUse.dict)
+                    TaskPlayAnim(ped, animToUse.dict, animToUse.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
+                end
+
                 if IsControlJustPressed(0, 177) then
                     stopPlacing()
                 end
@@ -177,10 +239,13 @@ function stopPlacing()
 end
 
 RegisterCommand("sit", function(source, args)
-    if not Config.Anims[tonumber(args[1])] then
-        lib.notify({type = "error", description = "Invalid value chosen. Usage: /sit [1-"..#Config.Anims.."]"})
+    local animToUse = Config.Anims[currentAnimIndex]
+
+    if not animToUse then
+        lib.notify({ type = "error", description = "No animation found." })
         return
     end
-    PlacingThread(Config.Anims[tonumber(args[1])])
+
+    PlacingThread(animToUse)
 end)
 
