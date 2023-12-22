@@ -4,7 +4,7 @@
 
 local ped = nil
 local sitting = false
-
+local oldCamView = nil
 
 local txt = {
     '-- Sit --  \n',
@@ -31,14 +31,6 @@ local function CycleAnimations(direction)
         end
     end
 end
-
-local function RequestAnimDictionary(dict)
-    RequestAnimDict(dict)
-    while not HasAnimDictLoaded(dict) do
-        Wait(1)
-    end
-end
-
 
 local function StartSittingThread()
     sitting = true
@@ -95,6 +87,7 @@ local function PlacingThread(animData)
         SetEntityCollision(ped, false, false)
         SetEntityAlpha(ped, 100)
         if Config.SetToFirstPerson then
+            oldCamView = GetFollowPedCamViewMode()
             SetFollowPedCamViewMode(3)
             SetCamViewModeForContext(0, 4)
         end
@@ -142,7 +135,7 @@ local function PlacingThread(animData)
                         return
                     end
 
-                    RequestAnimDictionary(animToUse.dict)
+                    lib.requestAnimDict(animToUse.dict)
                     TaskPlayAnim(ped, animToUse.dict, animToUse.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
                 end
 
@@ -155,7 +148,7 @@ local function PlacingThread(animData)
                         return
                     end
 
-                    RequestAnimDictionary(animToUse.dict)
+                    lib.requestAnimDict(animToUse.dict)
                     TaskPlayAnim(ped, animToUse.dict, animToUse.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
                 end
 
@@ -236,6 +229,10 @@ function stopPlacing()
     heading = 0.0
     currentCoords = nil
     lib.hideTextUI()
+    if Config.SetToFirstPerson then
+        SetFollowPedCamViewMode(oldCamView)
+        oldCamView = nil
+    end
 end
 
 RegisterCommand("sit", function(source, args)
